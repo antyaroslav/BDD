@@ -6,26 +6,41 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
+import ru.netology.data.ApiAuthHelper;
 import ru.netology.data.DataHelper;
 import ru.netology.page.DashboardPage;
-import ru.netology.page.LoginPage;
 
-import static com.codeborne.selenide.Selenide.closeWebDriver;
+import static com.codeborne.selenide.Selenide.executeJavaScript;
+import static com.codeborne.selenide.Selenide.open;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class TransferTest extends BaseUiTest {
-    private static final int AUTH_ATTEMPTS = 3;
-
     private final DataHelper.CardInfo firstCard = DataHelper.getFirstCard();
     private final DataHelper.CardInfo secondCard = DataHelper.getSecondCard();
     private DashboardPage dashboardPage;
 
     @BeforeAll
     void setUpSession() {
-        dashboardPage = authorize();
+        var authInfo = DataHelper.getAuthInfo();
+        var token = ApiAuthHelper.loginAndGetToken(
+                System.getProperty("selenide.baseUrl", "http://localhost:9999"),
+                authInfo,
+                DataHelper.getVerificationCode()
+        );
+
+        open("/");
+        executeJavaScript(
+                "window.sessionStorage.setItem('login', arguments[0]); " +
+                        "window.sessionStorage.setItem('token', arguments[1]); " +
+                        "window.history.pushState({}, '', '/dashboard'); " +
+                        "window.dispatchEvent(new PopStateEvent('popstate'));",
+                authInfo.login(),
+                token
+        );
+        dashboardPage = new DashboardPage();
     }
 
     @Test
@@ -48,22 +63,5 @@ class TransferTest extends BaseUiTest {
 
         assertEquals(firstBalanceBefore + amount, dashboardPage.getCardBalance(firstCard));
         assertEquals(secondBalanceBefore - amount, dashboardPage.getCardBalance(secondCard));
-    }
-
-    private DashboardPage authorize() {
-        RuntimeException lastError = null;
-
-        for (int attempt = 1; attempt <= AUTH_ATTEMPTS; attempt++) {
-            closeWebDriver();
-            try {
-                return LoginPage.openPage()
-                        .validLogin(DataHelper.getAuthInfo())
-                        .validVerify(DataHelper.getVerificationCode());
-            } catch (RuntimeException | AssertionError error) {
-                lastError = new RuntimeException("Authorization attempt " + attempt + " failed", error);
-            }
-        }
-
-        throw lastError;
     }
 }
