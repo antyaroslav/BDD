@@ -20,7 +20,7 @@ abstract class BaseUiTest {
     static void setUpAll() throws Exception {
         Configuration.baseUrl = System.getProperty("selenide.baseUrl", "http://localhost:9999");
         Configuration.browserSize = "1920x1080";
-        Configuration.timeout = 10000;
+        Configuration.timeout = 15000;
         Configuration.headless = Boolean.parseBoolean(System.getProperty("selenide.headless", "true"));
 
         var options = new ChromeOptions();

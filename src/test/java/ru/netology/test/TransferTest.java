@@ -52,8 +52,7 @@ class TransferTest extends BaseUiTest {
 
         dashboardPage = dashboardPage
                 .selectCardToDeposit(firstCard)
-                .transferValidAmount(amount, secondCard)
-                .reload();
+                .transferValidAmount(amount, secondCard);
 
         assertEquals(firstBalanceBefore + amount, dashboardPage.getCardBalance(firstCard));
         assertEquals(secondBalanceBefore - amount, dashboardPage.getCardBalance(secondCard));
