@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout
@@ -25,25 +25,40 @@ jobs:
       - name: Set up Chrome
         uses: browser-actions/setup-chrome@v1
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
       - name: Start app
+        shell: pwsh
         run: |
-          nohup java -jar artifacts/app-ibank-build-for-testers.jar > app.log 2>&1 &
-          for i in {1..60}; do
-            if curl -fsS http://localhost:9999 >/dev/null; then
-              echo "Application is up"
+          $process = Start-Process -FilePath java -ArgumentList '-jar', 'artifacts/app-ibank-build-for-testers.jar' -RedirectStandardOutput 'app.log' -RedirectStandardError 'app.log' -PassThru
+          "APP_PID=$($process.Id)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          for ($i = 0; $i -lt 60; $i++) {
+            try {
+              Invoke-WebRequest -Uri 'http://localhost:9999' -UseBasicParsing | Out-Null
+              Write-Host 'Application is up'
               exit 0
-            fi
-            sleep 1
-          done
-          echo "Application failed to start"
-          cat app.log
+            }
+            catch {
+              Start-Sleep -Seconds 1
+            }
+          }
+
+          Write-Host 'Application failed to start'
+          if (Test-Path 'app.log') {
+            Get-Content 'app.log'
+          }
           exit 1
 
       - name: Run tests
-        run: ./gradlew clean test
+        shell: pwsh
+        run: .\gradlew.bat clean test
+
+      - name: Stop app
+        if: always()
+        shell: pwsh
+        run: |
+          if ($env:APP_PID) {
+            Stop-Process -Id $env:APP_PID -Force -ErrorAction SilentlyContinue
+          }
 
       - name: Upload test reports
         if: always()
@@ -53,4 +68,5 @@ jobs:
           path: |
             build/reports/tests/test
             build/reports/problems
+            build/app-under-test.log
             app.log
