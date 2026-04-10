@@ -28,7 +28,7 @@ jobs:
       - name: Start app
         shell: pwsh
         run: |
-          $process = Start-Process -FilePath java -ArgumentList '-jar', 'artifacts/app-ibank-build-for-testers.jar' -RedirectStandardOutput 'app.log' -RedirectStandardError 'app.log' -PassThru
+          $process = Start-Process -FilePath java -ArgumentList '-jar', 'artifacts/app-ibank-build-for-testers.jar' -RedirectStandardOutput 'app-out.log' -RedirectStandardError 'app-err.log' -PassThru
           "APP_PID=$($process.Id)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
           for ($i = 0; $i -lt 60; $i++) {
@@ -43,8 +43,11 @@ jobs:
           }
 
           Write-Host 'Application failed to start'
-          if (Test-Path 'app.log') {
-            Get-Content 'app.log'
+          if (Test-Path 'app-out.log') {
+            Get-Content 'app-out.log'
+          }
+          if (Test-Path 'app-err.log') {
+            Get-Content 'app-err.log'
           }
           exit 1
 
@@ -69,4 +72,5 @@ jobs:
             build/reports/tests/test
             build/reports/problems
             build/app-under-test.log
-            app.log
+            app-out.log
+            app-err.log

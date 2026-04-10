@@ -10,12 +10,7 @@ import ru.netology.data.DataHelper;
 import ru.netology.page.DashboardPage;
 import ru.netology.page.LoginPage;
 
-import static com.codeborne.selenide.Selenide.clearBrowserCookies;
-import static com.codeborne.selenide.Selenide.clearBrowserLocalStorage;
 import static com.codeborne.selenide.Selenide.closeWebDriver;
-import static com.codeborne.selenide.Selenide.executeJavaScript;
-import static com.codeborne.selenide.Selenide.open;
-import static com.codeborne.selenide.Selenide.refresh;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -59,18 +54,12 @@ class TransferTest extends BaseUiTest {
         RuntimeException lastError = null;
 
         for (int attempt = 1; attempt <= AUTH_ATTEMPTS; attempt++) {
+            closeWebDriver();
             try {
-                open("/");
-                clearBrowserCookies();
-                clearBrowserLocalStorage();
-                executeJavaScript("window.sessionStorage.clear();");
-                refresh();
-
                 return LoginPage.openPage()
                         .validLogin(DataHelper.getAuthInfo())
                         .validVerify(DataHelper.getVerificationCode());
             } catch (RuntimeException | AssertionError error) {
-                closeWebDriver();
                 lastError = new RuntimeException("Authorization attempt " + attempt + " failed", error);
             }
         }
