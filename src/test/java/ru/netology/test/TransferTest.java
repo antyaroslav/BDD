@@ -11,6 +11,8 @@ import ru.netology.page.DashboardPage;
 import ru.netology.page.LoginPage;
 
 import static com.codeborne.selenide.Selenide.clearBrowserCookies;
+import static com.codeborne.selenide.Selenide.clearBrowserLocalStorage;
+import static com.codeborne.selenide.Selenide.closeWebDriver;
 import static com.codeborne.selenide.Selenide.executeJavaScript;
 import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.Selenide.refresh;
@@ -20,20 +22,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class TransferTest extends BaseUiTest {
+    private static final int AUTH_ATTEMPTS = 3;
+
     private final DataHelper.CardInfo firstCard = DataHelper.getFirstCard();
     private final DataHelper.CardInfo secondCard = DataHelper.getSecondCard();
     private DashboardPage dashboardPage;
 
     @BeforeAll
     void setUpSession() {
-        open("/");
-        clearBrowserCookies();
-        executeJavaScript("window.localStorage.clear(); window.sessionStorage.clear();");
-        refresh();
-
-        dashboardPage = LoginPage.openPage()
-                .validLogin(DataHelper.getAuthInfo())
-                .validVerify(DataHelper.getVerificationCode());
+        dashboardPage = authorize();
     }
 
     @Test
@@ -56,5 +53,28 @@ class TransferTest extends BaseUiTest {
 
         assertEquals(firstBalanceBefore + amount, dashboardPage.getCardBalance(firstCard));
         assertEquals(secondBalanceBefore - amount, dashboardPage.getCardBalance(secondCard));
+    }
+
+    private DashboardPage authorize() {
+        RuntimeException lastError = null;
+
+        for (int attempt = 1; attempt <= AUTH_ATTEMPTS; attempt++) {
+            try {
+                open("/");
+                clearBrowserCookies();
+                clearBrowserLocalStorage();
+                executeJavaScript("window.sessionStorage.clear();");
+                refresh();
+
+                return LoginPage.openPage()
+                        .validLogin(DataHelper.getAuthInfo())
+                        .validVerify(DataHelper.getVerificationCode());
+            } catch (RuntimeException | AssertionError error) {
+                closeWebDriver();
+                lastError = new RuntimeException("Authorization attempt " + attempt + " failed", error);
+            }
+        }
+
+        throw lastError;
     }
 }
