@@ -35,7 +35,7 @@ abstract class BaseUiTest {
             appStartedByTests = true;
         }
 
-        waitUntilAvailable(Duration.ofSeconds(30));
+        waitUntilAvailable(Duration.ofSeconds(60));
     }
 
     @AfterAll
@@ -47,9 +47,12 @@ abstract class BaseUiTest {
 
     private static void startApplication() throws IOException {
         var jar = new File("artifacts/app-ibank-build-for-testers.jar");
+        var logFile = new File("build/app-under-test.log");
+        logFile.getParentFile().mkdirs();
         appProcess = new ProcessBuilder("java", "-jar", jar.getAbsolutePath())
                 .directory(new File("."))
                 .redirectErrorStream(true)
+                .redirectOutput(ProcessBuilder.Redirect.appendTo(logFile))
                 .start();
     }
 
