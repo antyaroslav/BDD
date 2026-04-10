@@ -23,6 +23,7 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:5.12.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'com.codeborne:selenide:6.19.1'
+    testImplementation 'io.github.bonigarcia:webdrivermanager:6.3.3'
     testImplementation 'org.slf4j:slf4j-simple:2.0.17'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

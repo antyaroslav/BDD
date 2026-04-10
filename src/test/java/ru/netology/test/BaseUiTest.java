@@ -1,6 +1,7 @@
 package ru.netology.test;
 
 import com.codeborne.selenide.Configuration;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.openqa.selenium.PageLoadStrategy;
@@ -22,6 +23,10 @@ abstract class BaseUiTest {
         Configuration.browserSize = "1920x1080";
         Configuration.timeout = 15000;
         Configuration.headless = Boolean.parseBoolean(System.getProperty("selenide.headless", "true"));
+
+        if ("true".equalsIgnoreCase(System.getenv("GITHUB_ACTIONS"))) {
+            WebDriverManager.chromedriver().setup();
+        }
 
         var options = new ChromeOptions();
         options.setPageLoadStrategy(PageLoadStrategy.EAGER);
