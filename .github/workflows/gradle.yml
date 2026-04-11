@@ -1,76 +1,21 @@
-name: Java CI
+name: Java CI with Gradle
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
-on:
-  push:
-    branches:
-      - main
-      - master
-  pull_request:
+on: [push, pull_request]
 
 jobs:
-  test:
-    runs-on: windows-latest
+  build:
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Java 11
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
         with:
-          distribution: temurin
           java-version: '11'
-          cache: gradle
-
-      - name: Start app
-        shell: pwsh
-        run: |
-          $process = Start-Process -FilePath java -ArgumentList '-jar', 'artifacts/app-ibank-build-for-testers.jar' -RedirectStandardOutput 'app-out.log' -RedirectStandardError 'app-err.log' -PassThru
-          "APP_PID=$($process.Id)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-          for ($i = 0; $i -lt 60; $i++) {
-            try {
-              Invoke-WebRequest -Uri 'http://localhost:9999' -UseBasicParsing | Out-Null
-              Write-Host 'Application is up'
-              exit 0
-            }
-            catch {
-              Start-Sleep -Seconds 1
-            }
-          }
-
-          Write-Host 'Application failed to start'
-          if (Test-Path 'app-out.log') {
-            Get-Content 'app-out.log'
-          }
-          if (Test-Path 'app-err.log') {
-            Get-Content 'app-err.log'
-          }
-          exit 1
-
-      - name: Run tests
-        shell: pwsh
-        run: .\gradlew.bat clean test
-
-      - name: Stop app
-        if: always()
-        shell: pwsh
-        run: |
-          if ($env:APP_PID) {
-            Stop-Process -Id $env:APP_PID -Force -ErrorAction SilentlyContinue
-          }
-
-      - name: Upload test reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-reports
-          path: |
-            build/reports/tests/test
-            build/reports/problems
-            build/app-under-test.log
-            app-out.log
-            app-err.log
+          distribution: 'adopt'
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Start SUT
+        run: java -jar ./artifacts/app-ibank-build-for-testers.jar &
+      - name: Build with Gradle
+        run: ./gradlew test -Dselenide.headless=true --info

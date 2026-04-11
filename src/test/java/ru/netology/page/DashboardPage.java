@@ -3,7 +3,6 @@ package ru.netology.page;
 import com.codeborne.selenide.SelenideElement;
 import ru.netology.data.DataHelper;
 
-import java.time.Duration;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,13 +11,11 @@ import static com.codeborne.selenide.Selenide.$;
 
 public class DashboardPage extends BasePage {
     private static final Pattern NUMBER_PATTERN = Pattern.compile("(\\d+)");
-    private static final Duration PAGE_TIMEOUT = Duration.ofSeconds(20);
 
     private final SelenideElement dashboard = $(byTestId("dashboard"));
-    private final SelenideElement reloadButton = $(byTestId("action-reload"));
 
     public DashboardPage() {
-        dashboard.shouldBe(visible, PAGE_TIMEOUT);
+        dashboard.shouldBe(visible);
     }
 
     public int getCardBalance(DataHelper.CardInfo card) {
@@ -30,14 +27,8 @@ public class DashboardPage extends BasePage {
         return new TransferPage(card);
     }
 
-    public DashboardPage reload() {
-        reloadButton.shouldBe(visible, PAGE_TIMEOUT).click();
-        dashboard.shouldBe(visible, PAGE_TIMEOUT);
-        return this;
-    }
-
     private SelenideElement getCard(DataHelper.CardInfo card) {
-        return $(byTestId(card.id()));
+        return $(byTestId(card.getId()));
     }
 
     private int extractBalance(String text) {

@@ -5,7 +5,6 @@ import ru.netology.data.DataHelper;
 
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.open;
 
 public class LoginPage extends BasePage {
     private final SelenideElement loginInput = $(byTestIdAndTag("login", "input"));
@@ -16,14 +15,9 @@ public class LoginPage extends BasePage {
         loginInput.shouldBe(visible);
     }
 
-    public static LoginPage openPage() {
-        open("/");
-        return new LoginPage();
-    }
-
     public VerificationPage validLogin(DataHelper.AuthInfo authInfo) {
-        loginInput.setValue(authInfo.login());
-        passwordInput.setValue(authInfo.password());
+        loginInput.setValue(authInfo.getLogin());
+        passwordInput.setValue(authInfo.getPassword());
         continueButton.click();
         return new VerificationPage();
     }
