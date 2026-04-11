@@ -33,4 +33,5 @@ test {
     useJUnitPlatform()
     systemProperty 'selenide.baseUrl', System.getProperty('selenide.baseUrl', 'http://localhost:9999')
     systemProperty 'selenide.headless', System.getProperty('selenide.headless')
+    systemProperty 'chromeoptions.prefs', System.getProperty('chromeoptions.prefs', "profile.password_manager_leak_detection=false")
 }

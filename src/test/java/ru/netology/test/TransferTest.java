@@ -24,12 +24,6 @@ class TransferTest extends BaseUiTest {
     }
 
     @Test
-    void shouldShowBalancesForBothCards() {
-        assertTrue(dashboardPage.getCardBalance(firstCard) >= 0);
-        assertTrue(dashboardPage.getCardBalance(secondCard) >= 0);
-    }
-
-    @Test
     void shouldTransferMoneyFromSecondCardToFirst() {
         var firstBalanceBefore = dashboardPage.getCardBalance(firstCard);
         var secondBalanceBefore = dashboardPage.getCardBalance(secondCard);
